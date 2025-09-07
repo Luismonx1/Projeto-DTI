@@ -1,5 +1,6 @@
-﻿using System;
-using Microsoft.Data.Sqlite;
+﻿using Microsoft.Data.Sqlite;
+using System;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 class program
 {
@@ -15,12 +16,13 @@ class program
 
         while (i == 0)
         {
+
             Console.WriteLine("\n===== MENU =====");
             Console.WriteLine("1. Cadastrar Filme");
             Console.WriteLine("2. Excluir Filme");
             Console.WriteLine("3. Alterar Filme");
             Console.WriteLine("4. Listar Filmes");
-            Console.WriteLine("5. Buscar FIlme");
+            Console.WriteLine("5. Procurar FIlme");
             Console.WriteLine("0. Sair");
             Console.Write("Escolha uma opção: ");
             int op = int.Parse(Console.ReadLine());
@@ -39,9 +41,10 @@ class program
                     ListarFilmes();
                     break;
                 case 5:
-                    BuscarFilme();
+                    ProcurarFilme();
                     break;
                 case 0:
+                    i++;
                     break;
             }
 
@@ -53,7 +56,6 @@ class program
     {
         var conexao = new SqliteConnection(diretorio);
         conexao.Open();
-
         var comando = conexao.CreateCommand();
         comando.CommandText = @"
         CREATE TABLE IF NOT EXISTS Filmes (
@@ -83,7 +85,6 @@ class program
         }
         var conexao = new SqliteConnection(diretorio);
         conexao.Open();
-
         var comando = conexao.CreateCommand();
         comando.CommandText = "INSERT INTO Filmes (Nome, DataLancamento) VALUES ($nome, $data)";
         comando.Parameters.AddWithValue("$nome", nome);
@@ -94,7 +95,22 @@ class program
 
     static void ExcluirFilme()
     {
-
+        Console.WriteLine("Digite o Id do filme");
+        int id = int.Parse(Console.ReadLine());
+        var conexao = new SqliteConnection(diretorio);
+        conexao.Open();
+        var comando = conexao.CreateCommand();
+        comando.CommandText = "DELETE FROM Filmes WHERE Id = $id";
+        comando.Parameters.AddWithValue("$id", id);
+        int linhas = comando.ExecuteNonQuery();
+        if (linhas > 0)
+        {
+            Console.WriteLine("Filme Removido!");
+        }
+        else
+        {
+            Console.WriteLine("Filme não encontrado!");
+        }
     }
 
     static void ListarFilmes()
@@ -107,8 +123,28 @@ class program
 
     }
 
-    static void BuscarFilme()
+    static void ProcurarFilme()
     {
+        Console.WriteLine("Digite o id do filme");
+        int id = int.Parse(Console.ReadLine());
+        var conexao = new SqliteConnection(diretorio);
+        var comando = conexao.CreateCommand();
+        comando.CommandText = "SELECT Id, Nome, Datalancamento FROM Filmes WHERE Id = $id";
+        comando.Parameters.AddWithValue("$id", id);
+        var buscar = comando.ExecuteReader();
 
+        if (buscar.Read()) 
+        {
+            int filmeId = buscar.GetInt32(0); 
+            string nome = buscar.GetString(1); 
+            string data = buscar.GetString(2);
+            Console.WriteLine($"Id: {filmeId}");
+            Console.WriteLine($"Nome: {nome}");
+            Console.WriteLine($"Data de Lançamento: {data}");
+        }
+        else
+        {
+            Console.WriteLine("Filme não encontrado!");
+        }
     }
 }
