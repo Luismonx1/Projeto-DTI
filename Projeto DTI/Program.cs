@@ -16,7 +16,7 @@ class program
 
         while (i == 0)
         {
-
+            Console.Clear();
             Console.WriteLine("\n===== MENU =====");
             Console.WriteLine("1. Cadastrar Filme");
             Console.WriteLine("2. Excluir Filme");
@@ -47,9 +47,9 @@ class program
                     i++;
                     break;
             }
-
+            Console.WriteLine("Digite alguma tecla para continuar");
+            Console.ReadLine();
         }
-
     }
 
     static void CriarTabela()
@@ -120,7 +120,47 @@ class program
 
     static void AlterarFilme()
     {
+        Console.WriteLine("Digite o id do filme a ser alterado");
+        int id;
+        try
+        {
+            id = int.Parse(Console.ReadLine());
+        }
+        catch(FormatException)
+        {
+            Console.WriteLine("Parâmetro Inválido passado como Id!");
+            return;
+        }
+        if (id < 0)
+        {
+            Console.WriteLine("Parâmetro Inválido passado como Id!");
+            return;
+        }
 
+        Console.WriteLine("Digite o novo nome do Filme");
+        string nome = Console.ReadLine();
+        Console.WriteLine("Digite a nova Data de Lançamento");
+        string data = Console.ReadLine();
+        DateTime dataLancamento;
+        try
+        {
+            dataLancamento = DateTime.Parse(data);
+        }
+        catch (FormatException)
+        {
+            Console.WriteLine("Data Inválida, seu filme não foi cadastrado!");
+            return;
+        }
+
+        var conexao = new SqliteConnection(diretorio);
+        conexao.Open();
+        var comando = conexao.CreateCommand();
+        comando.CommandText = "UPDATE Filmes SET Nome = $nome, DataLancamento = $data WHERE Id = $id";
+        comando.Parameters.AddWithValue("$id", id);
+        comando.Parameters.AddWithValue("$nome", nome);
+        comando.Parameters.AddWithValue("data", data);
+        comando.ExecuteNonQuery();
+        Console.WriteLine("Filme Alterado com Sucesso!");
     }
 
     static void ProcurarFilme()
@@ -133,10 +173,10 @@ class program
         comando.Parameters.AddWithValue("$id", id);
         var buscar = comando.ExecuteReader();
 
-        if (buscar.Read()) 
+        if (buscar.Read())
         {
-            int filmeId = buscar.GetInt32(0); 
-            string nome = buscar.GetString(1); 
+            int filmeId = buscar.GetInt32(0);
+            string nome = buscar.GetString(1);
             string data = buscar.GetString(2);
             Console.WriteLine($"Id: {filmeId}");
             Console.WriteLine($"Nome: {nome}");
