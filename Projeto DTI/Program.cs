@@ -1,5 +1,6 @@
 ﻿using Microsoft.Data.Sqlite;
 using System;
+using System.Data;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 class program
@@ -96,7 +97,21 @@ class program
     static void ExcluirFilme()
     {
         Console.WriteLine("Digite o Id do filme");
-        int id = int.Parse(Console.ReadLine());
+        int id;
+        try
+        {
+            id = int.Parse(Console.ReadLine());
+        }
+        catch (FormatException)
+        {
+            Console.WriteLine("Parâmetro Inválido passado como Id!");
+            return;
+        }
+        if (id < 0)
+        {
+            Console.WriteLine("Parâmetro Inválido passado como Id!");
+            return;
+        }
         var conexao = new SqliteConnection(diretorio);
         conexao.Open();
         var comando = conexao.CreateCommand();
@@ -115,7 +130,16 @@ class program
 
     static void ListarFilmes()
     {
-
+        var conexao = new SqliteConnection(diretorio);
+        conexao.Open();
+        var comando = conexao.CreateCommand();
+        comando.CommandText = "SELECT Id,Nome,DataLancamento FROM Filmes";
+        var reader = comando.ExecuteReader();
+        Console.WriteLine("Lista de Filmes");
+        while (reader.Read())
+        {
+            Console.WriteLine("Id: " + reader.GetInt32(0) + " Nome: " + reader.GetString(1) + " Data: " + reader.GetString(2));
+        }
     }
 
     static void AlterarFilme()
@@ -126,7 +150,7 @@ class program
         {
             id = int.Parse(Console.ReadLine());
         }
-        catch(FormatException)
+        catch (FormatException)
         {
             Console.WriteLine("Parâmetro Inválido passado como Id!");
             return;
@@ -166,7 +190,21 @@ class program
     static void ProcurarFilme()
     {
         Console.WriteLine("Digite o id do filme");
-        int id = int.Parse(Console.ReadLine());
+        int id;
+        try
+        {
+            id = int.Parse(Console.ReadLine());
+        }
+        catch (FormatException)
+        {
+            Console.WriteLine("Parâmetro Inválido passado como Id!");
+            return;
+        }
+        if (id < 0)
+        {
+            Console.WriteLine("Parâmetro Inválido passado como Id!");
+            return;
+        }
         var conexao = new SqliteConnection(diretorio);
         var comando = conexao.CreateCommand();
         comando.CommandText = "SELECT Id, Nome, Datalancamento FROM Filmes WHERE Id = $id";
