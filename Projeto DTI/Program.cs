@@ -1,6 +1,7 @@
 ﻿using Microsoft.Data.Sqlite;
 using System;
 using System.Data;
+using System.Reflection.PortableExecutable;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 class program
@@ -71,9 +72,9 @@ class program
 
     static void CadastrarFilme()
     {
-        Console.WriteLine("Digite o nome do Filme");
+        Console.WriteLine("Digite o nome do filme");
         string nome = Console.ReadLine();
-        Console.WriteLine("Digite a Data de Lançamento");
+        Console.WriteLine("Digite a data de lançamento");
         string data = Console.ReadLine();
         Console.WriteLine("Digite uma descrição (opcional)");
         string descricao = Console.ReadLine();
@@ -84,7 +85,7 @@ class program
         }
         catch (FormatException)
         {
-            Console.WriteLine("Data Inválida, seu filme não foi cadastrado!");
+            Console.WriteLine("Data inválida, seu filme não foi cadastrado!");
             return;
         }
         using var conexao = new SqliteConnection(diretorio);
@@ -95,7 +96,7 @@ class program
         comando.Parameters.AddWithValue("$data", data);
         comando.Parameters.AddWithValue("$descricao", descricao);
         comando.ExecuteNonQuery();
-        Console.WriteLine("Filme Cadastrado!");
+        Console.WriteLine("Filme cadastrado!");
     }
 
     static void ExcluirFilme()
@@ -108,12 +109,12 @@ class program
         }
         catch (FormatException)
         {
-            Console.WriteLine("Parâmetro Inválido passado como Id!");
+            Console.WriteLine("Parâmetro inválido passado como Id!");
             return;
         }
         if (id < 0)
         {
-            Console.WriteLine("Parâmetro Inválido passado como Id!");
+            Console.WriteLine("Parâmetro inválido passado como Id!");
             return;
         }
         using var conexao = new SqliteConnection(diretorio);
@@ -124,7 +125,7 @@ class program
         int linhas = comando.ExecuteNonQuery();
         if (linhas > 0)
         {
-            Console.WriteLine("Filme Removido!");
+            Console.WriteLine("Filme removido!");
         }
         else
         {
@@ -138,20 +139,20 @@ class program
         conexao.Open();
         var comando = conexao.CreateCommand();
         comando.CommandText = "SELECT Id,Nome,DataLancamento,Descricao FROM Filmes";
-        var reader = comando.ExecuteReader();
-        Console.WriteLine("Lista de Filmes");
-        while (reader.Read())
+        var buscar = comando.ExecuteReader();
+        Console.WriteLine("=====Lista de filmes=====");
+        while (buscar.Read())
         {
             string descricao;
-            if (reader.IsDBNull(3)||reader.GetString(3)=="")
+            if (buscar.IsDBNull(3)||buscar.GetString(3)=="")
             {
                 descricao = "Sem descrição";
             }
             else
             {
-                descricao = reader.GetString(3);
+                descricao = buscar.GetString(3);
             }
-            Console.WriteLine("\nId: " + reader.GetInt32(0) + " \nNome: " + reader.GetString(1) + " \nData: " + reader.GetString(2) + " \nDescrição: " + (descricao));
+            Console.WriteLine("\nId: " + buscar.GetInt32(0) + " \nNome: " + buscar.GetString(1) + " \nData: " + buscar.GetString(2) + " \nDescrição: " + (descricao));
         }
     }
 
@@ -165,18 +166,18 @@ class program
         }
         catch (FormatException)
         {
-            Console.WriteLine("Parâmetro Inválido passado como Id!");
+            Console.WriteLine("Parâmetro inválido passado como Id!");
             return;
         }
         if (id < 0)
         {
-            Console.WriteLine("Parâmetro Inválido passado como Id!");
+            Console.WriteLine("Parâmetro inválido passado como Id!");
             return;
         }
 
-        Console.WriteLine("Digite o novo nome do Filme");
+        Console.WriteLine("Digite o novo nome do filme");
         string nome = Console.ReadLine();
-        Console.WriteLine("Digite a nova Data de Lançamento");
+        Console.WriteLine("Digite a nova data de lançamento");
         string data = Console.ReadLine();
         Console.WriteLine("Digite uma descrição (opcional)");
         string descricao = Console.ReadLine();
@@ -187,7 +188,7 @@ class program
         }
         catch (FormatException)
         {
-            Console.WriteLine("Data Inválida, o filme não foi alterado!");
+            Console.WriteLine("Data inválida, o filme não foi alterado!");
             return;
         }
 
@@ -200,7 +201,7 @@ class program
         comando.Parameters.AddWithValue("$data", data);
         comando.Parameters.AddWithValue("$descricao", descricao);
         comando.ExecuteNonQuery();
-        Console.WriteLine("Filme Alterado com Sucesso!");
+        Console.WriteLine("Filme alterado com sucesso!");
     }
 
     static void ProcurarFilme()
@@ -213,12 +214,12 @@ class program
         }
         catch (FormatException)
         {
-            Console.WriteLine("Parâmetro Inválido passado como Id!");
+            Console.WriteLine("Parâmetro inválido passado como Id!");
             return;
         }
         if (id < 0)
         {
-            Console.WriteLine("Parâmetro Inválido passado como Id!");
+            Console.WriteLine("Parâmetro inválido passado como Id!");
             return;
         }
         using var conexao = new SqliteConnection(diretorio);
@@ -233,7 +234,15 @@ class program
             int filmeId = buscar.GetInt32(0);
             string nome = buscar.GetString(1);
             string data = buscar.GetString(2);
-            string descricao = buscar.GetString(3);
+            string descricao;
+            if (buscar.IsDBNull(3) || buscar.GetString(3) == "")
+            {
+                descricao = "Sem descrição";
+            }
+            else
+            {
+                descricao = buscar.GetString(3);
+            }
             Console.WriteLine($"Id: {filmeId}");
             Console.WriteLine($"Nome: {nome}");
             Console.WriteLine($"Data de Lançamento: {data}");
