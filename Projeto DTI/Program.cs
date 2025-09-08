@@ -12,7 +12,7 @@ class program
         int i = 0;
         CriarTabela();
 
-        var conexao = new SqliteConnection(diretorio);
+        using var conexao = new SqliteConnection(diretorio);
         conexao.Open();
 
         while (i == 0)
@@ -45,6 +45,7 @@ class program
                     ProcurarFilme();
                     break;
                 case 0:
+                    Console.WriteLine("Saindo...");
                     i++;
                     break;
             }
@@ -55,17 +56,17 @@ class program
 
     static void CriarTabela()
     {
-        var conexao = new SqliteConnection(diretorio);
+        using var conexao = new SqliteConnection(diretorio);
         conexao.Open();
         var comando = conexao.CreateCommand();
         comando.CommandText = @"
         CREATE TABLE IF NOT EXISTS Filmes (
             Id INTEGER PRIMARY KEY AUTOINCREMENT,
             Nome TEXT NOT NULL,
-            DataLancamento DATE NOT NULL
+            DataLancamento DATE NOT NULL,
+            Descricao TEXT
             );";
         comando.ExecuteNonQuery();
-
     }
 
     static void CadastrarFilme()
@@ -74,6 +75,8 @@ class program
         string nome = Console.ReadLine();
         Console.WriteLine("Digite a Data de Lançamento");
         string data = Console.ReadLine();
+        Console.WriteLine("Digite uma descrição (opcional)");
+        string descricao = Console.ReadLine();
         DateTime dataLancamento;
         try
         {
@@ -84,12 +87,13 @@ class program
             Console.WriteLine("Data Inválida, seu filme não foi cadastrado!");
             return;
         }
-        var conexao = new SqliteConnection(diretorio);
+        using var conexao = new SqliteConnection(diretorio);
         conexao.Open();
         var comando = conexao.CreateCommand();
-        comando.CommandText = "INSERT INTO Filmes (Nome, DataLancamento) VALUES ($nome, $data)";
+        comando.CommandText = "INSERT INTO Filmes (Nome, DataLancamento, Descricao) VALUES ($nome, $data,$descricao)";
         comando.Parameters.AddWithValue("$nome", nome);
         comando.Parameters.AddWithValue("$data", data);
+        comando.Parameters.AddWithValue("$descricao", descricao);
         comando.ExecuteNonQuery();
         Console.WriteLine("Filme Cadastrado!");
     }
@@ -112,7 +116,7 @@ class program
             Console.WriteLine("Parâmetro Inválido passado como Id!");
             return;
         }
-        var conexao = new SqliteConnection(diretorio);
+        using var conexao = new SqliteConnection(diretorio);
         conexao.Open();
         var comando = conexao.CreateCommand();
         comando.CommandText = "DELETE FROM Filmes WHERE Id = $id";
@@ -130,15 +134,24 @@ class program
 
     static void ListarFilmes()
     {
-        var conexao = new SqliteConnection(diretorio);
+        using var conexao = new SqliteConnection(diretorio);
         conexao.Open();
         var comando = conexao.CreateCommand();
-        comando.CommandText = "SELECT Id,Nome,DataLancamento FROM Filmes";
+        comando.CommandText = "SELECT Id,Nome,DataLancamento,Descricao FROM Filmes";
         var reader = comando.ExecuteReader();
         Console.WriteLine("Lista de Filmes");
         while (reader.Read())
         {
-            Console.WriteLine("Id: " + reader.GetInt32(0) + " Nome: " + reader.GetString(1) + " Data: " + reader.GetString(2));
+            string descricao;
+            if (reader.IsDBNull(3)||reader.GetString(3)=="")
+            {
+                descricao = "Sem descrição";
+            }
+            else
+            {
+                descricao = reader.GetString(3);
+            }
+            Console.WriteLine("\nId: " + reader.GetInt32(0) + " \nNome: " + reader.GetString(1) + " \nData: " + reader.GetString(2) + " \nDescrição: " + (descricao));
         }
     }
 
@@ -165,6 +178,8 @@ class program
         string nome = Console.ReadLine();
         Console.WriteLine("Digite a nova Data de Lançamento");
         string data = Console.ReadLine();
+        Console.WriteLine("Digite uma descrição (opcional)");
+        string descricao = Console.ReadLine();
         DateTime dataLancamento;
         try
         {
@@ -172,17 +187,18 @@ class program
         }
         catch (FormatException)
         {
-            Console.WriteLine("Data Inválida, seu filme não foi cadastrado!");
+            Console.WriteLine("Data Inválida, o filme não foi alterado!");
             return;
         }
 
-        var conexao = new SqliteConnection(diretorio);
+        using var conexao = new SqliteConnection(diretorio);
         conexao.Open();
         var comando = conexao.CreateCommand();
-        comando.CommandText = "UPDATE Filmes SET Nome = $nome, DataLancamento = $data WHERE Id = $id";
+        comando.CommandText = "UPDATE Filmes SET Nome = $nome, DataLancamento = $data, Descricao = $descricao WHERE Id = $id";
         comando.Parameters.AddWithValue("$id", id);
         comando.Parameters.AddWithValue("$nome", nome);
-        comando.Parameters.AddWithValue("data", data);
+        comando.Parameters.AddWithValue("$data", data);
+        comando.Parameters.AddWithValue("$descricao", descricao);
         comando.ExecuteNonQuery();
         Console.WriteLine("Filme Alterado com Sucesso!");
     }
@@ -205,9 +221,10 @@ class program
             Console.WriteLine("Parâmetro Inválido passado como Id!");
             return;
         }
-        var conexao = new SqliteConnection(diretorio);
+        using var conexao = new SqliteConnection(diretorio);
+        conexao.Open();
         var comando = conexao.CreateCommand();
-        comando.CommandText = "SELECT Id, Nome, Datalancamento FROM Filmes WHERE Id = $id";
+        comando.CommandText = "SELECT Id, Nome, Datalancamento , Descricao FROM Filmes WHERE Id = $id";
         comando.Parameters.AddWithValue("$id", id);
         var buscar = comando.ExecuteReader();
 
@@ -216,9 +233,11 @@ class program
             int filmeId = buscar.GetInt32(0);
             string nome = buscar.GetString(1);
             string data = buscar.GetString(2);
+            string descricao = buscar.GetString(3);
             Console.WriteLine($"Id: {filmeId}");
             Console.WriteLine($"Nome: {nome}");
             Console.WriteLine($"Data de Lançamento: {data}");
+            Console.WriteLine($"Descrição: {descricao}");
         }
         else
         {
